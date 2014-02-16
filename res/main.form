@@ -1,0 +1,26 @@
+form MainForm
+{
+    theme = res/common/menu.theme
+    width = 320
+    height = 180
+    alignment = ALIGN_VCENTER_HLEFT
+    style = basic
+    
+    // Controls
+    container controlsContainer
+    {
+        style = noBorder
+        autoWidth = true
+        height = 60
+        label controlsLabel
+        {
+            style = title
+            autoWidth = true
+            textAlignment =  ALIGN_LEFT
+            height = 30
+            text = Booyow
+        }
+    }
+
+    
+}
