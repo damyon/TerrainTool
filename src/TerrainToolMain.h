@@ -57,6 +57,7 @@ private:
     bool drawScene(Node* node);
 
     Scene* _scene;
+    Terrain* _terrain;
     Form* _mainForm;
     Form* _generateForm;
     Form* _loadForm;

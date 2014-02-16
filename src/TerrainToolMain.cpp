@@ -4,20 +4,21 @@
 TerrainToolMain game;
 
 TerrainToolMain::TerrainToolMain()
-    : _scene(NULL), _mainForm(NULL),  _generateForm(NULL), _loadForm(NULL)
+    : _scene(NULL), _terrain(NULL), _mainForm(NULL), _generateForm(NULL), _loadForm(NULL)
 {
 }
 
 void TerrainToolMain::initialize()
 {
     // Load game scene from file
-   // _scene = Scene::load("res/empty.scene");
+    _scene = Scene::load("res/empty.scene");
 
     // Set the aspect ratio for the scene's camera to match the current resolution
-   // _scene->getActiveCamera()->setAspectRatio(getAspectRatio());
+    _scene->getActiveCamera()->setAspectRatio(getAspectRatio());
     
     _mainForm = Form::create("res/main.form");
  
+    // Manually load the default terrain.
 }
 
 void TerrainToolMain::finalize()
@@ -25,6 +26,7 @@ void TerrainToolMain::finalize()
     SAFE_RELEASE(_mainForm);
     SAFE_RELEASE(_generateForm);
     SAFE_RELEASE(_loadForm);
+    SAFE_RELEASE(_terrain);
     SAFE_RELEASE(_scene);
 }
 
@@ -71,7 +73,12 @@ bool TerrainToolMain::drawScene(Node* node)
     if (model)
     {
         model->draw();
+    } else if (node->getTerrain())
+    {
+        Terrain* terrain = node->getTerrain();
+        terrain->draw();
     }
+
     return true;
 }
 

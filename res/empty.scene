@@ -1,0 +1,11 @@
+scene
+{
+    path = res/empty.gpb
+
+    ambientColor = 1, 1, 1
+
+    physics
+    {
+        gravity = 0.0, -9.8, 0.0
+    }
+}

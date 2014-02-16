@@ -1,26 +1,31 @@
 form MainForm
 {
-    theme = res/common/menu.theme
+    theme = res/common/default.theme
     width = 320
-    height = 180
-    alignment = ALIGN_VCENTER_HLEFT
+    height = 110
+    alignment = ALIGN_TOP_RIGHT
     style = basic
     
     // Controls
-    container controlsContainer
+    container MainFormContainer
     {
         style = noBorder
         autoWidth = true
-        height = 60
-        label controlsLabel
+        autoHeight = true
+        layout = LAYOUT_FLOW
+        button ShowGenerateTerrainForm
         {
-            style = title
             autoWidth = true
-            textAlignment =  ALIGN_LEFT
-            height = 30
-            text = Booyow
+            text = Generate new terrain
+            height = 45
         }
-    }
+        button ShowLoadTerrainForm
+        {
+            autoWidth = true
+            text = Load terrain file
+            height = 45
+        }
+   }
 
     
 }
