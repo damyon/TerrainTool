@@ -1,31 +1,61 @@
 form MainForm
 {
     theme = res/common/default.theme
-    width = 320
-    height = 110
+    width = 640
+    height = 70
     alignment = ALIGN_TOP_RIGHT
-    style = basic
+    layout = LAYOUT_VERTICAL
+    style = noBorder
     
-    // Controls
-    container MainFormContainer
+    
+    container TerrainToolbar
     {
-        style = noBorder
+        autoWidth = true
+        autoHeight = true
+   
+        style = basic
         autoWidth = true
         autoHeight = true
         layout = LAYOUT_FLOW
-        button ShowGenerateTerrainForm
+        alignment = ALIGN_TOP
+                
+        radioButton NavigateButton
         {
-            autoWidth = true
-            text = Generate new terrain
+            group = TerrainGroup
+            text = Navigate
+            selected = true
             height = 45
+            width = 120
         }
-        button ShowLoadTerrainForm
+        
+        radioButton FlattenButton
         {
-            autoWidth = true
-            text = Load terrain file
+            group = TerrainGroup
+            text = Flatten
             height = 45
+            width = 120
         }
-   }
+        radioButton RaiseButton
+        {
+            group = TerrainGroup
+            text = Raise
+            height = 45
+            width = 120
+        }
+        radioButton LowerButton
+        {
+            group = TerrainGroup
+            text = Lower
+            height = 45
+            width = 120
+        }
+        
+        button GenerateTerrainButton
+        {
+            text = Generate New
+            height = 45
+            width = 120
+        }
+    }
 
-    
 }

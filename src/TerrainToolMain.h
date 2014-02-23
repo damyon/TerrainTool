@@ -3,12 +3,16 @@
 
 #include "gameplay.h"
 
+#include "FirstPersonCamera.h"
+#include "TerrainGenerator.h"
+#include "TerrainToolAutoBindingResolver.h"
+
 using namespace gameplay;
 
 /**
  * Main game class.
  */
-class TerrainToolMain: public Game
+class TerrainToolMain: public Game, Control::Listener
 {
 public:
 
@@ -16,7 +20,7 @@ public:
      * Constructor.
      */
     TerrainToolMain();
-
+    
     /**
      * @see Game::keyEvent
      */
@@ -49,18 +53,32 @@ protected:
      */
     void render(float elapsedTime);
 
+    void controlEvent(Control* control, EventType evt);
+
 private:
 
     /**
      * Draws the scene each frame.
      */
     bool drawScene(Node* node);
+    
+    void moveCamera(float elapsedTime);
 
+    enum INPUT_MODE { NAVIGATION, TERRAIN_RAISE, TERRAIN_LOWER, TERRAIN_FLATTEN };
+       
+    const float MOVE_SPEED;
     Scene* _scene;
-    Terrain* _terrain;
+    TerrainToolAutoBindingResolver* _binding;
+    FirstPersonCamera _camera;
+    TerrainGenerator _terrainGenerator;
+    Light* _light;
     Form* _mainForm;
+    Form* _sizeForm;
     Form* _generateForm;
     Form* _loadForm;
+    bool _moveForward, _moveBackward, _moveLeft, _moveRight;
+    float _prevX, _prevY;
+    INPUT_MODE _inputMode = NAVIGATION;
 };
 
 #endif
