@@ -5,6 +5,7 @@
 
 #include "FirstPersonCamera.h"
 #include "TerrainGenerator.h"
+#include "SelectionRing.h"
 #include "TerrainToolAutoBindingResolver.h"
 
 using namespace gameplay;
@@ -64,10 +65,12 @@ private:
     
     void moveCamera(float elapsedTime);
 
-    enum INPUT_MODE { NAVIGATION, TERRAIN_RAISE, TERRAIN_LOWER, TERRAIN_FLATTEN };
+    enum INPUT_MODE { NAVIGATION, TERRAIN };
        
     const float MOVE_SPEED;
     Scene* _scene;
+    Node* _selection;
+    SelectionRing *_selectionRing;
     TerrainToolAutoBindingResolver* _binding;
     FirstPersonCamera _camera;
     TerrainGenerator _terrainGenerator;
@@ -77,8 +80,27 @@ private:
     Form* _generateForm;
     Form* _loadForm;
     bool _moveForward, _moveBackward, _moveLeft, _moveRight;
+    bool _doAction = false;
     float _prevX, _prevY;
+    float _selectionScale;
     INPUT_MODE _inputMode = NAVIGATION;
 };
+
+struct TerrainHitFilter : public PhysicsController::HitFilter {
+
+    TerrainHitFilter(Terrain* terrain)
+    {
+        terrainObject = terrain->getNode()->getCollisionObject();
+    }
+
+    bool filter(PhysicsCollisionObject* object)
+    {
+        // Filter out all objects but the terrain
+        return (object != terrainObject);
+    }
+
+    PhysicsCollisionObject* terrainObject;
+};
+
 
 #endif

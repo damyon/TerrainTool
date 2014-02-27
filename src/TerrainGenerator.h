@@ -57,6 +57,8 @@ private:
     bool square(float *heights, float range, unsigned int subdivide, unsigned int size);
     float rand();
     Terrain *_terrain;
+    HeightField *_heightField;
+    
     unsigned int _heightFieldSize, _patchSize, _detailLevels, _seed;
     Vector3 _terrainScale;
     float _skirtScale, _minHeight, _maxHeight;

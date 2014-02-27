@@ -1,0 +1,26 @@
+form SizeForm
+{
+    theme = res/common/default.theme
+    width = 600
+    height = 135
+    alignment = ALIGN_TOP_RIGHT
+    layout = LAYOUT_FLOW
+    style = noBorder
+             
+    container {
+        width = 600
+        height = 90
+    }
+    slider SizeSlider
+    {
+        text = Size
+        selected = true
+        min = 0.0
+        max = 100.0
+        value = 50.0
+        step = 1.0
+        height = 45
+        width = 560
+    }
+    
+}

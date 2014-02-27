@@ -22,7 +22,7 @@
 #include <stdlib.h>
 
 TerrainGenerator::TerrainGenerator()
-: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3::one()), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(80.0f), _isDirty(true)
+: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(1000, 300, 1000)), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true)
 {
     timeval time;
     gettimeofday(&time, NULL);
@@ -104,7 +104,7 @@ void TerrainGenerator::rebuildTerrain()
 {
     SAFE_RELEASE(_terrain);
     
-    HeightField *heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
+    _heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
     
     unsigned int subdivide = 1, arraysize = 2;
     while (arraysize + 1 < _heightFieldSize) {
@@ -135,7 +135,7 @@ void TerrainGenerator::rebuildTerrain()
         range /= 2.0f;
     }
         
-    float *usedHeights = heightField->getArray();
+    float *usedHeights = _heightField->getArray();
     
     unsigned int i, j, k;
     for (i = 0; i < _heightFieldSize; i++) {
@@ -165,9 +165,7 @@ void TerrainGenerator::rebuildTerrain()
     // Copy the heights to the heightfield.
     delete heights;
     
-    _terrainScale = Vector3(100, 30, 100);
-    
-    _terrain = Terrain::create(heightField, 
+    _terrain = Terrain::create(_heightField, 
                                _terrainScale, 
                                _patchSize,
                                _detailLevels, 
@@ -176,7 +174,6 @@ void TerrainGenerator::rebuildTerrain()
                                NULL);
     
     
-    SAFE_RELEASE(heightField);
     _isDirty = false;
 }
 
@@ -268,24 +265,6 @@ void TerrainGenerator::setTerrainScale(Vector3 terrainScale)
     _isDirty = true;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Terrain* TerrainGenerator::getTerrain()
 {
     if (!_terrain || _isDirty) {
@@ -298,5 +277,6 @@ Terrain* TerrainGenerator::getTerrain()
 TerrainGenerator::~TerrainGenerator()
 {
     SAFE_RELEASE(_terrain);
+    SAFE_RELEASE(_heightField);
 }
 

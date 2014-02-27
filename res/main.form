@@ -2,60 +2,90 @@ form MainForm
 {
     theme = res/common/default.theme
     width = 640
-    height = 70
-    alignment = ALIGN_TOP_RIGHT
+    height = 640
+    position = 30, 30 
     layout = LAYOUT_VERTICAL
     style = noBorder
+    consumeInputEvents = false
     
-    
-    container TerrainToolbar
+    container Spacer1
+    {
+        width = 640
+        height = 20
+    }
+    container ModeToolbar
     {
         autoWidth = true
-        autoHeight = true
-   
-        style = basic
-        autoWidth = true
-        autoHeight = true
+        height = 75
         layout = LAYOUT_FLOW
         alignment = ALIGN_TOP
+        style = noBorder
                 
         radioButton NavigateButton
         {
-            group = TerrainGroup
+            group = ModeGroup
             text = Navigate
             selected = true
             height = 45
             width = 120
         }
         
-        radioButton FlattenButton
+        radioButton TerrainButton
         {
-            group = TerrainGroup
-            text = Flatten
-            height = 45
-            width = 120
-        }
-        radioButton RaiseButton
-        {
-            group = TerrainGroup
-            text = Raise
-            height = 45
-            width = 120
-        }
-        radioButton LowerButton
-        {
-            group = TerrainGroup
-            text = Lower
+            group = ModeGroup
+            text = Terrain
             height = 45
             width = 120
         }
         
+    }
+    container TerrainToolbar
+    {
+        visible = false
+        autoWidth = true
+        height = 450
+        layout = LAYOUT_VERTICAL
+        
+        slider SizeSlider
+        {
+            text = Size
+            selected = true
+            min = 50.0
+            max = 10000.0
+            value = 150.0
+            step = 1.0
+            height = 45
+            width = 600
+        }
+    
+        button FlattenButton
+        {
+            text = Flatten
+            height = 45
+            width = 120
+        }
+        button RaiseButton
+        {
+            text = Raise
+            height = 45
+            width = 120
+        }
+        button LowerButton
+        {
+            text = Lower
+            height = 45
+            width = 120
+        }
         button GenerateTerrainButton
         {
             text = Generate New
             height = 45
             width = 120
         }
+    
+
+           
+        
     }
 
 }
