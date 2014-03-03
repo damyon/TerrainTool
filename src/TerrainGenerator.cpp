@@ -19,6 +19,7 @@
 
 #include "TerrainGenerator.h"
 #include <sys/time.h>
+#include <math.h>
 #include <stdlib.h>
 
 TerrainGenerator::TerrainGenerator()
@@ -28,6 +29,243 @@ TerrainGenerator::TerrainGenerator()
     gettimeofday(&time, NULL);
     _seed = time.tv_usec;
     
+}
+
+const Matrix& TerrainGenerator::getInverseWorldMatrix() const
+{
+    _inverseWorldMatrix.set(_terrain->getNode()->getWorldMatrix());
+    
+    // Apply local scale and invert
+    _inverseWorldMatrix.scale(_terrainScale);
+    _inverseWorldMatrix.invert();
+    
+    return _inverseWorldMatrix;
+}
+
+void TerrainGenerator::flatten(float x, float z, float scale)
+{
+    float cols = _heightField->getColumnCount();
+    float rows = _heightField->getRowCount();
+    float *usedHeights = _heightField->getArray();
+    unsigned int i, j, repeats;
+ 
+    GP_ASSERT(cols > 0);
+    GP_ASSERT(rows > 0);
+
+    // Since the specified coordinates are in world space, we need to use the 
+    // inverse of our world matrix to transform the world x,z coords back into
+    // local heightfield coordinates for indexing into the height array.
+    Vector3 v = getInverseWorldMatrix() * Vector3(x, 0.0f, z);
+    Vector3 s = getInverseWorldMatrix() * Vector3(scale, 0.0f, 0.0f);
+    float average = this->average(x, z, scale);
+   
+    float localx = v.x + (cols - 1) * 0.5f;
+    float localz = v.z + (rows - 1) * 0.5f;
+    float localscale = s.x;
+  
+    for (i = 0; i < _heightFieldSize; i++) {
+        for (j = 0; j < _heightFieldSize; j++) {
+            float dist = this->distanceFromCenter((float)i, (float)j, localx, localz);
+            
+            float strength = (localscale*0.9f) - dist;
+            
+            if (strength > 0) {
+                usedHeights[i + (j * _heightFieldSize)] = average;
+            }
+        }
+    }
+
+
+    this->smooth(x, z, scale);
+    
+}
+
+float TerrainGenerator::average(float x, float z, float scale)
+{
+    float cols = _heightField->getColumnCount();
+    float rows = _heightField->getRowCount();
+    float *usedHeights = _heightField->getArray();
+    unsigned int i, j, repeats;
+ 
+    GP_ASSERT(cols > 0);
+    GP_ASSERT(rows > 0);
+
+    // Since the specified coordinates are in world space, we need to use the 
+    // inverse of our world matrix to transform the world x,z coords back into
+    // local heightfield coordinates for indexing into the height array.
+    Vector3 v = getInverseWorldMatrix() * Vector3(x, 0.0f, z);
+    Vector3 s = getInverseWorldMatrix() * Vector3(scale, 0.0f, 0.0f);
+    
+    float localx = v.x + (cols - 1) * 0.5f;
+    float localz = v.z + (rows - 1) * 0.5f;
+    float localscale = s.x;
+  
+    float average = 0.0f;
+    unsigned int count = 0;
+
+    for (i = 0; i < _heightFieldSize; i++) {
+        for (j = 0; j < _heightFieldSize; j++) {
+            float dist = this->distanceFromCenter((float)i, (float)j, localx, localz);
+            
+            float strength = localscale - dist;
+            
+            if (strength > 0) {
+                average += usedHeights[i + (j * _heightFieldSize)];
+                count++;
+            }
+        }
+    }
+
+    if (count == 0) {
+        count = 1;
+    }
+    return average / count;
+}
+
+
+void TerrainGenerator::updateTerrain()
+{
+    Node *node = NULL;
+    
+    if (_terrain) {
+        node = _terrain->getNode();
+    }
+    // SAFE_RELEASE(_terrain);
+    _terrain = Terrain::create(_heightField, 
+                               _terrainScale, 
+                               _patchSize,
+                               _detailLevels, 
+                               _skirtScale, 
+                               NULL,
+                               NULL);
+    
+    
+    if (node) {
+        node->setTerrain(_terrain);
+    }
+}
+
+
+void TerrainGenerator::smooth(float x, float z, float scale)
+{
+    float cols = _heightField->getColumnCount();
+    float rows = _heightField->getRowCount();
+    float *usedHeights = _heightField->getArray();
+    unsigned int i, j, repeats;
+ 
+    GP_ASSERT(cols > 0);
+    GP_ASSERT(rows > 0);
+
+    // Since the specified coordinates are in world space, we need to use the 
+    // inverse of our world matrix to transform the world x,z coords back into
+    // local heightfield coordinates for indexing into the height array.
+    Vector3 v = getInverseWorldMatrix() * Vector3(x, 0.0f, z);
+    Vector3 s = getInverseWorldMatrix() * Vector3(scale, 0.0f, 0.0f);
+    
+    float localx = v.x + (cols - 1) * 0.5f;
+    float localz = v.z + (rows - 1) * 0.5f;
+    float localscale = s.x;
+  
+    for (repeats = 0; repeats < 2; repeats++) {
+        for (i = 0; i < _heightFieldSize; i++) {
+            for (j = 0; j < _heightFieldSize; j++) {
+                float dist = this->distanceFromCenter((float)i, (float)j, localx, localz);
+                
+                float strength = localscale - dist;
+                
+                if (strength > 0) {
+                    usedHeights[i + (j * _heightFieldSize)] = (usedHeights[((i-1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[(i + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[((i+1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[((i-1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[(i + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[((i+1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[((i-1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[(i + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
+                                                            usedHeights[((i+1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)]) / 9.0f;
+                }
+            }
+        }
+    }
+    
+    this->updateTerrain();
+}
+
+float TerrainGenerator::distanceFromCenter(float x, float z, float centerx, float centerz) {
+    return sqrtf(powf(x - centerx, 2.0f) + powf(z - centerz, 2.0f));
+    
+}
+
+void TerrainGenerator::lower(float x, float z, float scale)
+{
+    float cols = _heightField->getColumnCount();
+    float rows = _heightField->getRowCount();
+    float *usedHeights = _heightField->getArray();
+    unsigned int i, j, repeats;
+ 
+    GP_ASSERT(cols > 0);
+    GP_ASSERT(rows > 0);
+
+    // Since the specified coordinates are in world space, we need to use the 
+    // inverse of our world matrix to transform the world x,z coords back into
+    // local heightfield coordinates for indexing into the height array.
+    Vector3 v = getInverseWorldMatrix() * Vector3(x, 0.0f, z);
+    Vector3 s = getInverseWorldMatrix() * Vector3(scale, 0.0f, 0.0f);
+    
+    float localx = v.x + (cols - 1) * 0.5f;
+    float localz = v.z + (rows - 1) * 0.5f;
+    float localscale = s.x;
+  
+    for (i = 0; i < _heightFieldSize; i++) {
+        for (j = 0; j < _heightFieldSize; j++) {
+            float dist = this->distanceFromCenter((float)i, (float)j, localx, localz);
+            
+            float strength = localscale - dist;
+            
+            if (strength > 0) {
+                usedHeights[i + (j * _heightFieldSize)] -= strength;
+            }
+        }
+    }
+
+    //this->smooth(x, z, scale);
+    this->updateTerrain();
+}
+
+void TerrainGenerator::raise(float x, float z, float scale)
+{
+    float cols = _heightField->getColumnCount();
+    float rows = _heightField->getRowCount();
+    float *usedHeights = _heightField->getArray();
+    unsigned int i, j, repeats;
+ 
+    GP_ASSERT(cols > 0);
+    GP_ASSERT(rows > 0);
+
+    // Since the specified coordinates are in world space, we need to use the 
+    // inverse of our world matrix to transform the world x,z coords back into
+    // local heightfield coordinates for indexing into the height array.
+    Vector3 v = getInverseWorldMatrix() * Vector3(x, 0.0f, z);
+    Vector3 s = getInverseWorldMatrix() * Vector3(scale, 0.0f, 0.0f);
+    
+    float localx = v.x + (cols - 1) * 0.5f;
+    float localz = v.z + (rows - 1) * 0.5f;
+    float localscale = s.x;
+  
+    for (i = 0; i < _heightFieldSize; i++) {
+        for (j = 0; j < _heightFieldSize; j++) {
+            float dist = this->distanceFromCenter((float)i, (float)j, localx, localz);
+            
+            float strength = localscale - dist;
+            
+            if (strength > 0) {
+                usedHeights[i + (j * _heightFieldSize)] += strength;
+            }
+        }
+    }
+
+    //this->smooth(x, z, scale);
+    this->updateTerrain();
 }
 
 bool TerrainGenerator::square(float *heights, float range, unsigned int subdivide, unsigned int arraysize) {
@@ -102,7 +340,7 @@ float TerrainGenerator::rand() {
 
 void TerrainGenerator::rebuildTerrain()
 {
-    SAFE_RELEASE(_terrain);
+    //SAFE_RELEASE(_terrain);
     
     _heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
     
@@ -165,14 +403,7 @@ void TerrainGenerator::rebuildTerrain()
     // Copy the heights to the heightfield.
     delete heights;
     
-    _terrain = Terrain::create(_heightField, 
-                               _terrainScale, 
-                               _patchSize,
-                               _detailLevels, 
-                               _skirtScale, 
-                               NULL,
-                               NULL);
-    
+    this->updateTerrain();
     
     _isDirty = false;
 }

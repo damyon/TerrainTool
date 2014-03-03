@@ -49,6 +49,20 @@ SelectionRing::SelectionRing(Scene* scene)
     
     _scene->addNode(_node);
 }
+float SelectionRing::getPositionX()
+{
+    return _x;
+}
+
+float SelectionRing::getPositionZ()
+{
+    return _z;
+}
+
+float SelectionRing::getScale()
+{
+    return _scale;
+}
 
 SelectionRing::~SelectionRing()
 {
@@ -60,6 +74,8 @@ void SelectionRing::setPosition(float x, float z, Terrain *terrain)
 {
     Node *ring = _node->getFirstChild();
     int i = 0;
+    _x = x;
+    _z = z;
     while(ring) {
         float offsetx = sin((float)i/_ringCount * MATH_PIX2) * _scale;
         float offsetz = cos((float)i/_ringCount * MATH_PIX2) * _scale;

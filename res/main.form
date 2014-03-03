@@ -42,7 +42,7 @@ form MainForm
     container TerrainToolbar
     {
         visible = false
-        autoWidth = true
+        width = 120
         height = 450
         layout = LAYOUT_VERTICAL
         
@@ -50,12 +50,12 @@ form MainForm
         {
             text = Size
             selected = true
-            min = 50.0
-            max = 10000.0
-            value = 150.0
+            min = 500.0
+            max = 50000.0
+            value = 500.0
             step = 1.0
             height = 45
-            width = 600
+            width = 120
         }
     
         button FlattenButton
@@ -73,6 +73,12 @@ form MainForm
         button LowerButton
         {
             text = Lower
+            height = 45
+            width = 120
+        }
+        button SmoothButton
+        {
+            text = Smooth
             height = 45
             width = 120
         }

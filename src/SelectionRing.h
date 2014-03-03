@@ -29,10 +29,13 @@ class SelectionRing: public Ref
 private:
     Scene *_scene;
     Node *_node;
-    float _scale;
+    float _scale, _x, _z;
     int _ringCount;
     
 public:
+    float getPositionX();
+    float getPositionZ();
+    float getScale();
     SelectionRing(Scene *scene);
     void setScale(float scale, Terrain *terrain);
     void setPosition(float x, float z, Terrain *terrain);

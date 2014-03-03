@@ -30,6 +30,7 @@ public:
     TerrainGenerator();
     
     void rebuildTerrain();
+    void updateTerrain();
     Terrain * getTerrain();
     
     ~TerrainGenerator();
@@ -51,8 +52,14 @@ public:
     void setMaxHeight(float maxHeight);
     float getMaxHeight();
     
-    
+    void flatten(float x, float z, float scale);
+    void raise(float x, float z, float scale);
+    void lower(float x, float z, float scale);
+    void smooth(float x, float z, float scale);
+    float average(float x, float z, float scale);
 private:
+    float distanceFromCenter(float x, float z, float centerX, float centerZ);
+    const Matrix& getInverseWorldMatrix() const;
     bool diamond(float *heights, float range, unsigned int subdivide, unsigned int size);
     bool square(float *heights, float range, unsigned int subdivide, unsigned int size);
     float rand();
@@ -63,6 +70,7 @@ private:
     Vector3 _terrainScale;
     float _skirtScale, _minHeight, _maxHeight;
     bool _isDirty;
+    mutable Matrix _inverseWorldMatrix;
 };
 
 #endif // TERRAINGENERATOR_H

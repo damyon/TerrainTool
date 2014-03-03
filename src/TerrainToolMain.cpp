@@ -15,7 +15,9 @@ TerrainToolMain::TerrainToolMain()
       _prevX(0), 
       _prevY(0), 
       MOVE_SPEED(10.0f), 
-      _selectionScale(100.0f)
+      _selectionScale(100.0f),
+      _inputMode(NAVIGATION),
+      _doAction(false)
 {
 }
 
@@ -33,16 +35,6 @@ void TerrainToolMain::initialize()
     
     _selectionRing = new SelectionRing(_scene);
     
-    /*
-    Bundle* bundle;
-    bundle = Bundle::create("res/selection.gpb");
-    _selection = bundle->loadNode("SelectionModel");
-    _selection->getModel()->setMaterial("res/demo.material#colored", 0);
-
-    SAFE_RELEASE(bundle);
-    _scene->addNode(_selection);
-    */
-    
     // Create a light source.
     _light = Light::createDirectional(Vector3::one());
     Node* lightNode = _scene->addNode("light");
@@ -57,6 +49,18 @@ void TerrainToolMain::initialize()
     control = _mainForm->getControl("NavigateButton");
     control->addListener(this, Control::Listener::CLICK);
     
+    control = _mainForm->getControl("RaiseButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
+    control = _mainForm->getControl("LowerButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
+    control = _mainForm->getControl("FlattenButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
+    control = _mainForm->getControl("SmoothButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
     Slider *slider = (Slider *) _mainForm->getControl("SizeSlider");
     slider->addListener(this, Control::Listener::VALUE_CHANGED);
     _selectionScale = slider->getValue();
@@ -106,7 +110,17 @@ void TerrainToolMain::controlEvent(Control* control, Control::Listener::EventTyp
         Slider * slider = (Slider *) control;
         _selectionScale = slider->getValue();
         _selectionRing->setScale(_selectionScale, _terrainGenerator.getTerrain());
+    } else if (strcmp(control->getId(), "RaiseButton") == 0) {
+        _terrainGenerator.raise(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
+    } else if (strcmp(control->getId(), "LowerButton") == 0) {
+        _terrainGenerator.lower(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
+    } else if (strcmp(control->getId(), "FlattenButton") == 0) {
+        _terrainGenerator.flatten(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
+    } else if (strcmp(control->getId(), "SmoothButton") == 0) {
+        _terrainGenerator.smooth(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
+       
     }
+   
 }
 
 

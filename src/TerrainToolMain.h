@@ -80,10 +80,10 @@ private:
     Form* _generateForm;
     Form* _loadForm;
     bool _moveForward, _moveBackward, _moveLeft, _moveRight;
-    bool _doAction = false;
+    bool _doAction;
     float _prevX, _prevY;
     float _selectionScale;
-    INPUT_MODE _inputMode = NAVIGATION;
+    INPUT_MODE _inputMode;
 };
 
 struct TerrainHitFilter : public PhysicsController::HitFilter {
