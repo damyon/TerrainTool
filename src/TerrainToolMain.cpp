@@ -18,6 +18,7 @@ TerrainToolMain::TerrainToolMain()
       _selectionScale(100.0f),
       _inputMode(NAVIGATION),
       _doAction(false)
+      
 {
 }
 
@@ -28,7 +29,7 @@ void TerrainToolMain::initialize()
     _scene->setAmbientColor(1, 1, 0.86f);
     
     // Setup a fly cam.
-    _camera.initialize(1.0f, 100000.0f, 45);
+    _camera.initialize(1.0f, 200000.0f, 45);
     _camera.rotate(0.0f, -MATH_DEG_TO_RAD(10));
     _scene->addNode(_camera.getRootNode());
     _scene->setActiveCamera(_camera.getCamera());
@@ -48,7 +49,10 @@ void TerrainToolMain::initialize()
     
     control = _mainForm->getControl("NavigateButton");
     control->addListener(this, Control::Listener::CLICK);
-    
+     
+    control = _mainForm->getControl("PaintButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
     control = _mainForm->getControl("RaiseButton");
     control->addListener(this, Control::Listener::CLICK);
    
@@ -63,6 +67,9 @@ void TerrainToolMain::initialize()
    
     Slider *slider = (Slider *) _mainForm->getControl("SizeSlider");
     slider->addListener(this, Control::Listener::VALUE_CHANGED);
+    slider = (Slider *) _mainForm->getControl("SizeSlider2");
+    slider->addListener(this, Control::Listener::VALUE_CHANGED);
+    
     _selectionScale = slider->getValue();
     
     _binding = new TerrainToolAutoBindingResolver();
@@ -81,7 +88,7 @@ void TerrainToolMain::initialize()
     _selectionRing->setPosition(0, 0, terrain);
    
     _selectionRing->setScale(_selectionScale, terrain);
-    _camera.setPosition(Vector3(0, terrain->getHeight(0, 0) + 100, 1000));
+    _camera.setPosition(Vector3(0, terrain->getHeight(0, 1000) + 1000, 1000));
     
     
 }
@@ -101,15 +108,31 @@ void TerrainToolMain::controlEvent(Control* control, Control::Listener::EventTyp
 {
     if (strcmp(control->getId(), "NavigateButton") == 0) {
         _inputMode = NAVIGATION;
+        _mainForm->getControl("PaintToolbar")->setVisible(false);
         _mainForm->getControl("TerrainToolbar")->setVisible(false);
     } else if (strcmp(control->getId(), "TerrainButton") == 0) {
         _inputMode = TERRAIN;
+        _mainForm->getControl("PaintToolbar")->setVisible(false);
         _mainForm->getControl("TerrainToolbar")->setVisible(true);
+        
+    } else if (strcmp(control->getId(), "PaintButton") == 0) {
+        _inputMode = PAINT;
+        _mainForm->getControl("TerrainToolbar")->setVisible(false);
+        _mainForm->getControl("PaintToolbar")->setVisible(true);
         
     } else if (strcmp(control->getId(), "SizeSlider") == 0) {
         Slider * slider = (Slider *) control;
         _selectionScale = slider->getValue();
         _selectionRing->setScale(_selectionScale, _terrainGenerator.getTerrain());
+         Slider *slider2 = (Slider *) _mainForm->getControl("SizeSlider2");
+        slider2->setValue(slider->getValue());
+    } else if (strcmp(control->getId(), "SizeSlider2") == 0) {
+        Slider * slider = (Slider *) control;
+        _selectionScale = slider->getValue();
+        _selectionRing->setScale(_selectionScale, _terrainGenerator.getTerrain());
+        Slider *slider2 = (Slider *) _mainForm->getControl("SizeSlider");
+        slider2->setValue(slider->getValue());
+        
     } else if (strcmp(control->getId(), "RaiseButton") == 0) {
         _terrainGenerator.raise(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
     } else if (strcmp(control->getId(), "LowerButton") == 0) {
@@ -292,7 +315,7 @@ void TerrainToolMain::touchEvent(Touch::TouchEvent evt, int x, int y, unsigned i
             float pitch = -MATH_DEG_TO_RAD(deltaY * 0.5f);
             float yaw = MATH_DEG_TO_RAD(deltaX * 0.5f);
             _camera.rotate(yaw, pitch);
-        } else if (_inputMode == TERRAIN) {
+        } else if (_inputMode == TERRAIN || _inputMode == PAINT) {
             Ray pickRay;
             _scene->getActiveCamera()->pickRay(Rectangle (0, 0, getWidth(), getHeight()), x, y, &pickRay);
             Terrain *terrain = _terrainGenerator.getTerrain();

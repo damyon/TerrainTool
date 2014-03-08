@@ -21,6 +21,7 @@
 #include <sys/time.h>
 #include <math.h>
 #include <stdlib.h>
+#include <cairo/cairo.h>
 
 TerrainGenerator::TerrainGenerator()
 : _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(1000, 300, 1000)), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true)
@@ -130,6 +131,7 @@ void TerrainGenerator::updateTerrain()
     if (_terrain) {
         node = _terrain->getNode();
     }
+   
     // SAFE_RELEASE(_terrain);
     _terrain = Terrain::create(_heightField, 
                                _terrainScale, 
@@ -139,6 +141,9 @@ void TerrainGenerator::updateTerrain()
                                NULL,
                                NULL);
     
+    _terrain->setLayer(0, "res/common/terrain/dirt.dds", Vector2(50, 50));
+    _terrain->setLayer(1, "res/common/terrain/grass.dds", Vector2(50, 50), "res/common/terrain/grass-blend.png", 3);
+    _terrain->setLayer(2, "res/common/terrain/rock.dds", Vector2(50, 50), "res/common/terrain/rock-blend.png", 3);
     
     if (node) {
         node->setTerrain(_terrain);

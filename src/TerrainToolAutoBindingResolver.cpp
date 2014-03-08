@@ -64,7 +64,7 @@ bool TerrainToolAutoBindingResolver::resolveAutoBinding(const char* autoBinding,
 Vector3 TerrainToolAutoBindingResolver::getLightColor0() const
 {
     if (_light) {
-        return _light->getNode()->getForwardVectorView();
+        return _light->getColor();
     }
     return Vector3::one();
 }

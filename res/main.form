@@ -38,6 +38,14 @@ form MainForm
             width = 120
         }
         
+        radioButton PaintButton
+        {
+            group = ModeGroup
+            text = Paint
+            height = 45
+            width = 120
+        }
+        
     }
     container TerrainToolbar
     {
@@ -89,6 +97,58 @@ form MainForm
             width = 120
         }
     
+
+           
+        
+    }
+    container PaintToolbar
+    {
+        visible = false
+        width = 120
+        height = 450
+        layout = LAYOUT_VERTICAL
+        
+        slider SizeSlider2
+        {
+            text = Size
+            selected = true
+            min = 500.0
+            max = 50000.0
+            value = 500.0
+            step = 1.0
+            height = 45
+            width = 120
+        }
+        
+        radioButton GrassButton
+        {
+            group = TextureGroup
+            text = Grass
+            selected = true
+            height = 45
+            width = 120
+        }
+        
+        radioButton RocksButton
+        {
+            group = TextureGroup
+            text = Rocks
+            height = 45
+            width = 120
+        }
+        
+        button DrawButton
+        {
+            text = Draw
+            height = 45
+            width = 120
+        }
+        button EraseButton
+        {
+            text = Erase
+            height = 45
+            width = 120
+        }
 
            
         

@@ -65,7 +65,7 @@ private:
     
     void moveCamera(float elapsedTime);
 
-    enum INPUT_MODE { NAVIGATION, TERRAIN };
+    enum INPUT_MODE { NAVIGATION, TERRAIN, PAINT };
        
     const float MOVE_SPEED;
     Scene* _scene;
