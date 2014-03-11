@@ -18,19 +18,115 @@
 
 
 #include "TerrainGenerator.h"
+#include "LodePNG.h"
 #include <sys/time.h>
 #include <math.h>
 #include <stdlib.h>
-#include <cairo/cairo.h>
+#include <stdio.h>
 
 TerrainGenerator::TerrainGenerator()
-: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(1000, 300, 1000)), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true)
+: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(1000, 300, 1000)), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true), _blendResolution(1024)
 {
     timeval time;
     gettimeofday(&time, NULL);
     _seed = time.tv_usec;
     
+    _layer1BlendFile[0] = '\0';
+    _layer2BlendFile[0] = '\0';
+    
 }
+
+void TerrainGenerator::createTransparentBlendImages()
+{
+    std::vector<unsigned char> blend1, blend2;
+    unsigned int x, z, k, k1, k2, k3, k4;
+    float worldx, worldz, worldy, intensity;
+    float worldminx = _terrain->getBoundingBox().min.x;
+    float worldminz = _terrain->getBoundingBox().min.z;
+    float worldmaxx = _terrain->getBoundingBox().max.x;
+    float worldmaxz = _terrain->getBoundingBox().max.z;
+    float terrainminheight = 0.0f, terrainmaxheight = 0.0f;
+    blend1.resize(_blendResolution * _blendResolution * 4);
+    blend2.resize(_blendResolution * _blendResolution * 4);
+    
+     for (x = 0; x < _blendResolution; x++) {
+        for (z = 0; z < _blendResolution; z++) {
+            k = 4 * x + (z * _blendResolution * 4);
+           
+            worldx = ((float)x / (float)_blendResolution) * (worldmaxx - worldminx) + worldminx;
+            worldz = ((float)z / (float)_blendResolution) * (worldmaxz - worldminz) + worldminz;
+            worldy = _terrain->getHeight(worldx, worldz);
+            
+            if (worldy < terrainminheight || (x == 0 && z == 0)) {
+                terrainminheight = worldy;
+            }
+
+            if (worldy > terrainmaxheight || (x == 0 && z == 0)) {
+                terrainmaxheight = worldy;
+            }
+            
+            // purely slope based
+            worldy = _terrain->getHeight(worldx, worldz);
+            intensity = abs(_terrain->getHeight(worldx-100, worldz) - worldy);
+            intensity += abs(_terrain->getHeight(worldx+100, worldz) - worldy);
+            intensity += abs(_terrain->getHeight(worldx, worldz-100) - worldy);
+            intensity += abs(_terrain->getHeight(worldx, worldz+100) - worldy);
+            intensity /= 400.0f;
+            if (intensity > 1.0f) {
+                intensity = 1.0f;
+            }
+            intensity *= 254;
+            blend2[k] = intensity;
+            blend2[k+1] = intensity;
+            blend2[k+2] = intensity;
+            blend2[k+3] = intensity;
+        }
+     }
+    
+    // Layer 1 is determined purely by the height.
+    for (x = 0; x < _blendResolution; x++) {
+        for (z = 0; z < _blendResolution; z++) {
+            k = 4 * x + (z * _blendResolution * 4);
+            
+            // purely height based
+            worldx = ((float)x / (float)_blendResolution) * (worldmaxx - worldminx) + worldminx;
+            worldz = ((float)z / (float)_blendResolution) * (worldmaxz - worldminz) + worldminz;
+            worldy = _terrain->getHeight(worldx, worldz);
+            worldy -= terrainminheight;
+            worldy /= (float)(terrainmaxheight - terrainminheight);
+            intensity = 254 * worldy;
+            
+            blend1[k] = intensity;
+            blend1[k+1] = intensity;
+            blend1[k+2] = intensity;
+            blend1[k+3] = intensity;
+            
+            // average the slope blends
+            k1 = 4 * ((x-1) % _blendResolution) + (z * _blendResolution * 4);
+            k2 = 4 * ((x+1) % _blendResolution) + (z * _blendResolution * 4);
+            k3 = 4 * (x) + (((z-1) % _blendResolution) * _blendResolution * 4);
+            k4 = 4 * (x) + (((z+1) % _blendResolution) * _blendResolution * 4);
+            blend2[k] = (blend2[k] + blend2[k1] + blend2[k2] + blend2[k3] + blend2[k4]) / 5.0f;
+            blend2[k+1] = blend2[k+2] = blend2[k+3] = blend2[k];
+            
+        }
+    }
+    char tmpdir[] = "/tmp/fileXXXXXX";
+    mkdtemp(tmpdir);
+    
+    if (_layer1BlendFile[0] != '\0') {
+        remove(_layer1BlendFile);
+        remove(_layer2BlendFile);
+    }
+    
+    sprintf(_layer1BlendFile, "%s/blend1.png", tmpdir);
+    sprintf(_layer2BlendFile, "%s/blend2.png", tmpdir);
+    
+    lodepng::encode(_layer1BlendFile, blend1, _blendResolution, _blendResolution);
+    
+    lodepng::encode(_layer2BlendFile, blend2, _blendResolution, _blendResolution);
+}
+
 
 const Matrix& TerrainGenerator::getInverseWorldMatrix() const
 {
@@ -141,9 +237,11 @@ void TerrainGenerator::updateTerrain()
                                NULL,
                                NULL);
     
-    _terrain->setLayer(0, "res/common/terrain/dirt.dds", Vector2(50, 50));
-    _terrain->setLayer(1, "res/common/terrain/grass.dds", Vector2(50, 50), "res/common/terrain/grass-blend.png", 3);
-    _terrain->setLayer(2, "res/common/terrain/rock.dds", Vector2(50, 50), "res/common/terrain/rock-blend.png", 3);
+    this->createTransparentBlendImages();
+    
+    _terrain->setLayer(0, "res/common/terrain/grass.dds", Vector2(50, 50));
+    _terrain->setLayer(1, "res/common/terrain/dirt.dds", Vector2(50, 50), _layer1BlendFile, 3);
+    _terrain->setLayer(2, "res/common/terrain/rock.dds", Vector2(50, 50), _layer2BlendFile, 3);
     
     if (node) {
         node->setTerrain(_terrain);
@@ -157,6 +255,7 @@ void TerrainGenerator::smooth(float x, float z, float scale)
     float rows = _heightField->getRowCount();
     float *usedHeights = _heightField->getArray();
     unsigned int i, j, repeats;
+    unsigned int iminus, iplus, jminus, jplus;
  
     GP_ASSERT(cols > 0);
     GP_ASSERT(rows > 0);
@@ -179,15 +278,32 @@ void TerrainGenerator::smooth(float x, float z, float scale)
                 float strength = localscale - dist;
                 
                 if (strength > 0) {
-                    usedHeights[i + (j * _heightFieldSize)] = (usedHeights[((i-1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[(i + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[((i+1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[((i-1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[(i + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[((i+1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[((i-1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[(i + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                            usedHeights[((i+1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)]) / 9.0f;
+                    iminus = i - 1;
+                    iplus = i + 1;
+                    jminus = j - 1;
+                    jplus = j + 1;
+                    if (iminus >= _heightFieldSize) {
+                        iminus = 0;
+                    }
+                    if (jminus >= _heightFieldSize) {
+                        jminus = 0;
+                    }                    
+                    if (iplus >= _heightFieldSize) {
+                        iplus = _heightFieldSize - 1;
+                    }
+                    if (jplus > _heightFieldSize) {
+                        jplus = _heightFieldSize - 1;
+                    }                    
+                    
+                    usedHeights[i + (j * _heightFieldSize)] = (usedHeights[iminus + (jminus * _heightFieldSize)] +
+                                                            usedHeights[i + (jminus * _heightFieldSize)] +
+                                                            usedHeights[iplus + (jminus * _heightFieldSize)] +
+                                                            usedHeights[iminus + (j * _heightFieldSize)] +
+                                                            usedHeights[i + (j * _heightFieldSize)] +
+                                                            usedHeights[iplus + (j * _heightFieldSize)] +
+                                                            usedHeights[iminus + (jplus * _heightFieldSize)] +
+                                                            usedHeights[i + (jplus * _heightFieldSize)] +
+                                                            usedHeights[iplus + (jplus * _heightFieldSize)]) / 9.0f;
                 }
             }
         }
@@ -346,11 +462,12 @@ float TerrainGenerator::rand() {
 void TerrainGenerator::rebuildTerrain()
 {
     //SAFE_RELEASE(_terrain);
+    unsigned int margin = 100;
     
     _heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
     
     unsigned int subdivide = 1, arraysize = 2;
-    while (arraysize + 1 < _heightFieldSize) {
+    while (arraysize + 1 < (_heightFieldSize + 2*margin)) {
         arraysize *= 2;
     }
     arraysize += 1;
@@ -383,7 +500,7 @@ void TerrainGenerator::rebuildTerrain()
     unsigned int i, j, k;
     for (i = 0; i < _heightFieldSize; i++) {
         for (j = 0; j < _heightFieldSize; j++) {
-            usedHeights[i + (j * _heightFieldSize)] = heights[i + arraysize * j];
+            usedHeights[i + (j * _heightFieldSize)] = heights[(i+margin) + arraysize * (j+margin)];
         }
     }
     
@@ -411,6 +528,7 @@ void TerrainGenerator::rebuildTerrain()
     this->updateTerrain();
     
     _isDirty = false;
+    
 }
 
 unsigned int TerrainGenerator::getDetailLevels()

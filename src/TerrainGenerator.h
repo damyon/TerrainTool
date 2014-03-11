@@ -58,13 +58,17 @@ public:
     void smooth(float x, float z, float scale);
     float average(float x, float z, float scale);
 private:
+    char _layer1BlendFile[2048];
+    char _layer2BlendFile[2048];
     float distanceFromCenter(float x, float z, float centerX, float centerZ);
     const Matrix& getInverseWorldMatrix() const;
+    void createTransparentBlendImages();
     bool diamond(float *heights, float range, unsigned int subdivide, unsigned int size);
     bool square(float *heights, float range, unsigned int subdivide, unsigned int size);
     float rand();
     Terrain *_terrain;
     HeightField *_heightField;
+    unsigned int _blendResolution;
     
     unsigned int _heightFieldSize, _patchSize, _detailLevels, _seed;
     Vector3 _terrainScale;
