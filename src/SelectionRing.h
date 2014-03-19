@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2014  <copyright holder> <email>
+    Terrain Tool - Interactive terrain editor.
+    Copyright (C) 2014  Damyon Wiese <damyon.wiese@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
