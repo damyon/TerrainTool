@@ -37,7 +37,7 @@ form MainForm
             height = 45
             width = 120
         }
-        
+        /** Not implemented yet
         radioButton PaintButton
         {
             group = ModeGroup
@@ -45,6 +45,7 @@ form MainForm
             height = 45
             width = 120
         }
+        */
         
     }
     container TerrainToolbar
@@ -149,9 +150,5 @@ form MainForm
             height = 45
             width = 120
         }
-
-           
-        
     }
-
 }

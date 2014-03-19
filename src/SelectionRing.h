@@ -24,21 +24,100 @@
 
 using namespace gameplay;
 
+/**
+ * Selection ring represents a renderable shape that indicates a selected region on the heightmap.
+ * The selection is always a circle, but the size and location changes.
+ **/
 class SelectionRing: public Ref
 {
 private:
+    /**
+     * The root scene node
+     **/
     Scene *_scene;
+    
+    /**
+     * The root node of the selection (contains child nodes)
+     **/
     Node *_node;
-    float _scale, _x, _z;
+    
+    /**
+     * The scale of the selection in world units.
+     **/
+    float _scale;
+    
+    /**
+     * The x coordinate of the selection
+     **/
+    float _x;
+    
+    /**
+     * The z coordinate of the selection
+     **/
+    float _z;
+    
+    /**
+     * How many renderable nodes to paint around the selection circle.
+     **/
     int _ringCount;
     
+    /**
+     * Position the nodes in the ring so each sits just above the terrain.
+     *
+     * @return void
+     **/
+    void setRingNodeHeights(Terrain *terrain);
 public:
+    /**
+     * Getter for the x position
+     *
+     * @return float
+     **/
     float getPositionX();
+    
+    /**
+     * Getter for the y position
+     *
+     * @return float
+     **/
     float getPositionZ();
+    
+    /**
+     * Getter for the scale of the ring (radius)
+     *
+     * @return float
+     **/
     float getScale();
+    
+    /**
+     * Constructor
+     *
+     * @param scene Root node of the scene graph.
+     **/
     SelectionRing(Scene *scene);
+    
+    /**
+     * Set the scale of the selection
+     *
+     * @param scale The new scale value
+     * @param terrain Used to get the heights of the renderable objects around the circle.
+     * @return void
+     **/
     void setScale(float scale, Terrain *terrain);
+    
+    /**
+     * Set the x and z coordinates of the center of the selection.
+     *
+     * @param x x coordinate
+     * @param z z coordinate
+     * @param terrain Used to get the heights of the renderable objects around the circle.
+     * @return void
+     **/
     void setPosition(float x, float z, Terrain *terrain);
+    
+    /**
+     * Destructor
+     **/
     virtual ~SelectionRing();
 };
 

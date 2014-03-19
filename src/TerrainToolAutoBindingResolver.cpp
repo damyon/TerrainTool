@@ -19,14 +19,10 @@
 
 #include "TerrainToolAutoBindingResolver.h"
 
-namespace gameplay
-{
     
 TerrainToolAutoBindingResolver::TerrainToolAutoBindingResolver()
     : _light(NULL)
 {
-    GP_WARN("Init Terrain Auto Binding.");
-
     
 }
 
@@ -75,5 +71,4 @@ Vector3 TerrainToolAutoBindingResolver::getLightDirection0() const
         return _light->getNode()->getForwardVectorView();
     }
     return Vector3::one();
-}
 }

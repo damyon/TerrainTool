@@ -131,7 +131,7 @@ ENDIF (TARGET_OS STREQUAL "LINUX")
 source_group(res FILES ${GAME_RES} ${GAMEPLAY_RES} ${GAME_RES_SHADERS} ${GAME_RES_SHADERS_LIB})
 source_group(src FILES ${GAME_SRC})
 
-set(GAME_SRC src/DiamondSquareNoise.h src/DiamondSquareNoise.cpp src/INoiseAlgorithm.h src/SelectionRing.cpp src/TerrainToolAutoBindingResolver.cpp src/TerrainGenerator.cpp src/FirstPersonCamera.cpp src/LodePNG.h src/LodePNG.cpp
+set(GAME_SRC src/SimplexNoise.h src/SimplexNoise.cpp src/DiamondSquareNoise.h src/DiamondSquareNoise.cpp src/INoiseAlgorithm.h src/SelectionRing.cpp src/TerrainToolAutoBindingResolver.cpp src/TerrainGenerator.cpp src/FirstPersonCamera.cpp src/LodePNG.h src/LodePNG.cpp
 	src/TerrainToolMain.cpp
 	src/TerrainToolMain.h
 )

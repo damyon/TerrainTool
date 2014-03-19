@@ -23,18 +23,25 @@
 SelectionRing::SelectionRing(Scene* scene)
 :_ringCount(16)
 {
+    // Store a reference to the scene node.
     _scene = scene;
     _scene->addRef();
     
+    // Load a 3d model for a single point around the ring.
     Bundle* bundle;
     bundle = Bundle::create("res/selection.gpb");
     Node *one = bundle->loadNode("SelectionModel");
+    
+    // Attempt to set a material for the model - this is not working and I need to work out why.
     one->getModel()->setMaterial("res/demo.material#colored", 0);
 
+    // We dont need this anymore.
     SAFE_RELEASE(bundle);
     
+    // Save a reference to the model node.
     _node = _scene->addNode("SelectionRing");
-    //_node->setScale(1000);
+    
+    // Duplicate the node at even points around the selection ring.
     int i = 0;
     for (i = 0; i < _ringCount; i++) {
         float x = sin((float)i/_ringCount * MATH_PIX2);
@@ -42,7 +49,6 @@ SelectionRing::SelectionRing(Scene* scene)
         Node *clone = one->clone();
         clone->setTranslationX(x);
         clone->setTranslationX(y);
-     //   clone->setScale(100.0f);
         _node->addChild(clone);
         SAFE_RELEASE(clone);
     }
@@ -72,27 +78,37 @@ SelectionRing::~SelectionRing()
 
 void SelectionRing::setPosition(float x, float z, Terrain *terrain)
 {
-    Node *ring = _node->getFirstChild();
-    int i = 0;
     _x = x;
     _z = z;
+    
+    this->setRingNodeHeights(terrain);
+}
+
+void SelectionRing::setRingNodeHeights(Terrain *terrain)
+{
+    Node *ring = _node->getFirstChild();
+    int i = 0;
+
+    // Adjust the height of each node in the ring so it sits just above the terrain.
     while(ring) {
         float offsetx = sin((float)i/_ringCount * MATH_PIX2) * _scale;
         float offsetz = cos((float)i/_ringCount * MATH_PIX2) * _scale;
         // adjust the height seperately for each node in the ring.
-        float height = terrain->getHeight(offsetx + x, offsetz + z) + 100;
+        float height = terrain->getHeight(offsetx + _x, offsetz + _z) + 100;
         ring->setScale(_scale / 8.0f);
-        ring->setTranslation(offsetx + x, height, offsetz + z);
+        ring->setTranslation(offsetx + _x, height, offsetz + _z);
         ring = ring->getNextSibling();
         i++;
     }
-  
+
 }
+
 
 void SelectionRing::setScale(float scale, Terrain *terrain)
 {
     _scale = scale;
-    setPosition(_node->getTranslationX(), _node->getTranslationZ(), terrain);
+    
+    this->setRingNodeHeights(terrain);
 }
 
 

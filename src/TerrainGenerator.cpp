@@ -18,6 +18,8 @@
 
 
 #include "TerrainGenerator.h"
+#include "DiamondSquareNoise.h"
+#include "SimplexNoise.h"
 #include "LodePNG.h"
 #include <sys/time.h>
 #include <math.h>
@@ -25,12 +27,12 @@
 #include <stdio.h>
 
 TerrainGenerator::TerrainGenerator()
-: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(1000, 300, 1000)), _skirtScale(1.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true), _blendResolution(1024)
+: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(2000, 300, 2000)), _skirtScale(3.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true), _blendResolution(1024)
 {
     timeval time;
     gettimeofday(&time, NULL);
-    _seed = time.tv_usec;
     
+    // The file name changes each time they are generated to prevent caching.
     _layer1BlendFile[0] = '\0';
     _layer2BlendFile[0] = '\0';
     
@@ -57,6 +59,7 @@ void TerrainGenerator::createTransparentBlendImages()
             worldz = ((float)z / (float)_blendResolution) * (worldmaxz - worldminz) + worldminz;
             worldy = _terrain->getHeight(worldx, worldz);
             
+            // In the first pass we determine the min and max for the entire terrain.
             if (worldy < terrainminheight || (x == 0 && z == 0)) {
                 terrainminheight = worldy;
             }
@@ -65,7 +68,7 @@ void TerrainGenerator::createTransparentBlendImages()
                 terrainmaxheight = worldy;
             }
             
-            // purely slope based
+            // And work out the value for the purely slope based map.
             worldy = _terrain->getHeight(worldx, worldz);
             intensity = abs(_terrain->getHeight(worldx-100, worldz) - worldy);
             intensity += abs(_terrain->getHeight(worldx+100, worldz) - worldy);
@@ -88,7 +91,7 @@ void TerrainGenerator::createTransparentBlendImages()
         for (z = 0; z < _blendResolution; z++) {
             k = 4 * x + (z * _blendResolution * 4);
             
-            // purely height based
+            // Purely height based.
             worldx = ((float)x / (float)_blendResolution) * (worldmaxx - worldminx) + worldminx;
             worldz = ((float)z / (float)_blendResolution) * (worldmaxz - worldminz) + worldminz;
             worldy = _terrain->getHeight(worldx, worldz);
@@ -101,7 +104,7 @@ void TerrainGenerator::createTransparentBlendImages()
             blend1[k+2] = intensity;
             blend1[k+3] = intensity;
             
-            // average the slope blends
+            // Average the slope blends (a bit smoother).
             k1 = 4 * ((x-1) % _blendResolution) + (z * _blendResolution * 4);
             k2 = 4 * ((x+1) % _blendResolution) + (z * _blendResolution * 4);
             k3 = 4 * (x) + (((z-1) % _blendResolution) * _blendResolution * 4);
@@ -111,10 +114,12 @@ void TerrainGenerator::createTransparentBlendImages()
             
         }
     }
+    // Generate a new tmp folder for the blend images.
     char tmpdir[] = "/tmp/fileXXXXXX";
     mkdtemp(tmpdir);
     
     if (_layer1BlendFile[0] != '\0') {
+        // Delete old blend files
         remove(_layer1BlendFile);
         remove(_layer2BlendFile);
     }
@@ -122,6 +127,7 @@ void TerrainGenerator::createTransparentBlendImages()
     sprintf(_layer1BlendFile, "%s/blend1.png", tmpdir);
     sprintf(_layer2BlendFile, "%s/blend2.png", tmpdir);
     
+    // Generate the pngs.
     lodepng::encode(_layer1BlendFile, blend1, _blendResolution, _blendResolution);
     
     lodepng::encode(_layer2BlendFile, blend2, _blendResolution, _blendResolution);
@@ -389,141 +395,25 @@ void TerrainGenerator::raise(float x, float z, float scale)
     this->updateTerrain();
 }
 
-bool TerrainGenerator::square(float *heights, float range, unsigned int subdivide, unsigned int arraysize) {
-    unsigned int squaresize = arraysize - 1, i = 0, j = 0;
-    unsigned int indexTL, indexTR, indexBL, indexBR, indexL, indexT, indexR, indexB;
-    for (i = 0; i < subdivide; i++) {
-        squaresize /= 2;
-    }
-    if (squaresize == 1) {
-        return false;
-    }
-    
-    for (i = 0; i * squaresize < arraysize-1; i++) {
-        for (j = 0; j * squaresize < arraysize-1; j++) {
-            indexTL = j * squaresize * arraysize + i * squaresize;
-            indexTR = j * squaresize * arraysize + (i + 1) * squaresize;
-            indexBL = (j + 1) * squaresize * arraysize + i * squaresize;
-            indexTR = (j + 1) * squaresize * arraysize + (i + 1) * squaresize;
-            indexL = ((j * squaresize) + (squaresize / 2)) * arraysize + (i * squaresize);
-            indexR = ((j * squaresize) + (squaresize / 2)) * arraysize + ((i+1) * squaresize);
-            indexT = (j * squaresize) * arraysize + (i * squaresize) + (squaresize / 2);
-            indexB = ((j+1) * squaresize) * arraysize + (i * squaresize) + (squaresize / 2);
-            
-            // Average the sides
-            heights[indexT] = (heights[indexTL] + heights[indexTR]) / 2.0f;
-            heights[indexL] = (heights[indexTL] + heights[indexBL]) / 2.0f;
-            heights[indexB] = (heights[indexBL] + heights[indexBR]) / 2.0f;
-            heights[indexR] = (heights[indexTR] + heights[indexBR]) / 2.0f;
-            // Add randomness
-            heights[indexT] += (this->rand() - 0.5f) * range;
-            heights[indexB] += (this->rand() - 0.5f) * range;
-            heights[indexL] += (this->rand() - 0.5f) * range;
-            heights[indexR] += (this->rand() - 0.5f) * range;
-        }
-    }
-    
-    return true;
-}
-
-bool TerrainGenerator::diamond(float* heights, float range, unsigned int subdivide, unsigned int arraysize)
+void TerrainGenerator::buildTerrain()
 {
-    unsigned int squaresize = arraysize - 1, i = 0, j = 0;
-    unsigned int indexTL, indexTR, indexBL, indexBR, indexC;
-    for (i = 0; i < subdivide; i++) {
-        squaresize /= 2;
-    }
-    if (squaresize == 1) {
-        return false;
-    }
-    
-    for (i = 0; i * squaresize < arraysize-1; i++) {
-        for (j = 0; j * squaresize < arraysize-1; j++) {
-            indexTL = j * squaresize * arraysize + i * squaresize;
-            indexTR = j * squaresize * arraysize + (i + 1) * squaresize;
-            indexBL = (j + 1) * squaresize * arraysize + i * squaresize;
-            indexTR = (j + 1) * squaresize * arraysize + (i + 1) * squaresize;
-            indexC = ((j * squaresize) + (squaresize / 2)) * arraysize + (i * squaresize) + (squaresize / 2);
-            
-            // Average the corners
-            heights[indexC] = (heights[indexTL] + heights[indexTR] + heights[indexBL] + heights[indexBR]) / 4.0f;
-            // Add randomness
-            heights[indexC] += (this->rand() - 0.5f) * range;
-        }
-    }
-    
-    return true;
-}
-
-float TerrainGenerator::rand() {
-    return (float)(::rand() % 10000) / 10000.0f;
-}
-
-void TerrainGenerator::rebuildTerrain()
-{
-    //SAFE_RELEASE(_terrain);
-    unsigned int margin = 100;
-    
     _heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
     
-    unsigned int subdivide = 1, arraysize = 2;
-    while (arraysize + 1 < (_heightFieldSize + 2*margin)) {
-        arraysize *= 2;
-    }
-    arraysize += 1;
+    //INoiseAlgorithm * noise = new DiamondSquareNoise();
+    INoiseAlgorithm * noise = new SimplexNoise();
     
-    // now an array of size subdivide * subdivide will be just larger than the height field array
-    // but will be suitable dimensions for diamond square
-    
-    float* heights = new float[arraysize * arraysize];
-    memset(heights, 0, sizeof(float) * arraysize * arraysize);
-    // corners first
-    srand(_seed);
-    float range = _maxHeight - _minHeight;
-    heights[0] = (this->rand() * range) + _minHeight;
-    heights[arraysize-1] = (this->rand() * range) + _minHeight;
-    heights[arraysize*(arraysize-1) ] = (this->rand() * range) + _minHeight;
-    heights[(arraysize*arraysize)-1] = (this->rand() * range) + _minHeight;
-    
-    
-    subdivide = 0;
-    while (
-        diamond(heights, range, subdivide, arraysize) && 
-        square(heights, range, subdivide, arraysize)) {
-        
-        subdivide += 1;
-        range /= 2.0f;
-    }
-        
+    noise->init(_heightFieldSize, _heightFieldSize, _minHeight, _maxHeight);
+            
     float *usedHeights = _heightField->getArray();
     
     unsigned int i, j, k;
     for (i = 0; i < _heightFieldSize; i++) {
         for (j = 0; j < _heightFieldSize; j++) {
-            usedHeights[i + (j * _heightFieldSize)] = heights[(i+margin) + arraysize * (j+margin)];
+            usedHeights[i + (j * _heightFieldSize)] = noise->noise(i, j);
         }
     }
     
-    // simple smoothing
-    for (k = 0; k < 3; k++) {
-        for (i = 0; i < _heightFieldSize; i++) {
-            for (j = 0; j < _heightFieldSize; j++) {
-                usedHeights[i + (j * _heightFieldSize)] = (usedHeights[((i-1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[(i + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[((i+1) + ((j-1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[((i-1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[(i + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[((i+1) + (j * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[((i-1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[(i + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)] +
-                                                        usedHeights[((i+1) + ((j+1) * _heightFieldSize)) % (_heightFieldSize*_heightFieldSize)]) / 9.0f;
-            }
-        }
-    }
-    
-    
-    // Copy the heights to the heightfield.
-    delete heights;
+    delete noise;
     
     this->updateTerrain();
     
@@ -622,7 +512,7 @@ void TerrainGenerator::setTerrainScale(Vector3 terrainScale)
 Terrain* TerrainGenerator::getTerrain()
 {
     if (!_terrain || _isDirty) {
-        rebuildTerrain();
+        buildTerrain();
     }
     return _terrain;
 }

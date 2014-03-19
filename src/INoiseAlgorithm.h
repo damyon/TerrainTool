@@ -20,11 +20,36 @@
 #ifndef INOISEALGORITHM_H
 #define INOISEALGORITHM_H
 
+/**
+ * Interface for a noise algorithm used for terrain generation.
+ **/
 class INoiseAlgorithm
 {
     public:
+        /**
+         * Just to make subclasses desctructors work.
+         *
+         **/
         virtual ~INoiseAlgorithm() {}
+        /**
+         * Initialise the algorithm
+         *
+         * @param maxx The maximum range of the X coord
+         * @param maxz The maximum range of the Z coord
+         * @param rangemin The minimum height
+         * @param rangemax The maximum height
+         * @return void
+         **/
         virtual void init(double maxx, double maxz, double rangemin, double rangemax) = 0;
+        
+        
+        /**
+         * Generate a height for an X/Z coordinate.
+         *
+         * @param x The x coordinate
+         * @param z The z coordinate
+         * @return double
+         **/
         virtual double noise(double x, double z) = 0;
 };
 

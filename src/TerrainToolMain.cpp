@@ -29,7 +29,7 @@ void TerrainToolMain::initialize()
     _scene->setAmbientColor(1, 1, 0.86f);
     
     // Setup a fly cam.
-    _camera.initialize(1.0f, 200000.0f, 45);
+    _camera.initialize(1.0f, 400000.0f, 45);
     _camera.rotate(0.0f, -MATH_DEG_TO_RAD(10));
     _scene->addNode(_camera.getRootNode());
     _scene->setActiveCamera(_camera.getCamera());
@@ -50,9 +50,10 @@ void TerrainToolMain::initialize()
     control = _mainForm->getControl("NavigateButton");
     control->addListener(this, Control::Listener::CLICK);
      
+    /* Not implemented yet
     control = _mainForm->getControl("PaintButton");
     control->addListener(this, Control::Listener::CLICK);
-   
+    */
     control = _mainForm->getControl("RaiseButton");
     control->addListener(this, Control::Listener::CLICK);
    

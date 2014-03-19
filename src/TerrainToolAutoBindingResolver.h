@@ -21,9 +21,11 @@
 
 #include "gameplay.h"
 
-namespace gameplay
-{
+using namespace gameplay;
 
+/**
+ * This class is used to supply parameters to the terrain shader.
+ **/
 class TerrainToolAutoBindingResolver : RenderState::AutoBindingResolver
 {
 public:
@@ -32,17 +34,50 @@ public:
      */
     TerrainToolAutoBindingResolver();
     
+    /**
+     * The light determines the direction of shadows etc.
+     *
+     * @param light The scene light.
+     * @return void
+     **/
     void setLight(Light *light);
     
+    /**
+     * Destructor.
+     *
+     **/
     virtual ~TerrainToolAutoBindingResolver();
 
+    /**
+     * The callback that gets the parameters for the shader.
+     *
+     * @param autoBinding The name of the parameter
+     * @param node The node for the material
+     * @param parameter The Material parameter
+     * @return bool
+     **/
     bool resolveAutoBinding(const char* autoBinding, Node* node, MaterialParameter* parameter);
 
+    /**
+     * Called by resolveAutoBinding to get the direction of the light.
+     *
+     * @return :Vector3
+     **/
     Vector3 getLightDirection0() const;
+    
+    /**
+     * Called by resolveAutoBinding to get the colour of the light.
+     *
+     * @return :Vector3
+     **/
     Vector3 getLightColor0() const;
 private:
+    
+    /**
+     * Reference to the scene light.
+     **/
     Light *_light;
 };
 
-}
+
 #endif // TERRAINTOOLAUTOBINDINGRESOLVER_H

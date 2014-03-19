@@ -1,6 +1,6 @@
 /*
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) 2014  <copyright holder> <email>
+    Terrain Tool - Interactive terrain editor.
+    Copyright (C) 2014  Damyon Wiese <damyon.wiese@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,21 +22,25 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 double DiamondSquareNoise::rand()
 {
-    return _min + static_cast <double> (rand()) /( static_cast <double> (RAND_MAX/(_max-_min)));
+    return _min + static_cast <double> (random()) /( static_cast <double> (RAND_MAX/(_max-_min)));
 }
 
+
 DiamondSquareNoise::DiamondSquareNoise() :
-_heights(NULL), _size(0), _min(0), _max(0)
+_heights(NULL), _size(0), _min(0), _max(0), _margin(100)
 {
 
 }
+
 
 double DiamondSquareNoise::noise(double x, double z)
 {
-    return _heights[(int)x, (int)z];
+    return _heights[(int)(x + _margin) + ((int)(z + _margin) * _size)];
 }
+
 
 void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double rangemax)
 {
@@ -46,9 +50,9 @@ void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double 
     _min = rangemin;
     _max = rangemax;
     // Determine the smallest power of 2+1 that fits our requested array size + margins.
-    unsigned int margin = 100;
+    
     unsigned int subdivide = 1, arraysize = 2;
-    while (arraysize + 1 < (_size + 2*margin)) {
+    while (arraysize + 1 < (_size + 2*_margin)) {
         arraysize *= 2;
     }
     arraysize += 1;
@@ -63,6 +67,7 @@ void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double 
     _heights[_size*(_size-1) ] = this->rand();
     _heights[(_size*_size)-1] = this->rand();
     
+    // Now to the iterations until we are down to a square size of 1x1.
     subdivide = 0;
     while (
         this->diamond(subdivide) && 
@@ -70,13 +75,41 @@ void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double 
         
         subdivide += 1;
     }
-    
+
+    // Now apply some smoothing to make it look a bit nicer.
+    this->smooth();
+
 }
+
+
+void DiamondSquareNoise::smooth()
+{
+    int k, i, j, size2 = _size * _size;
+    // simple smoothing
+    for (k = 0; k < 2; k++) {
+        for (i = 0; i < _size; i++) {
+            for (j = 0; j < _size; j++) {
+                _heights[i + (j * _size)] = (_heights[((i-1) + ((j-1) * _size)) % (size2)] +
+                                                        _heights[(i + ((j-1) * _size)) % (size2)] +
+                                                        _heights[((i+1) + ((j-1) * _size)) % (size2)] +
+                                                        _heights[((i-1) + (j * _size)) % (size2)] +
+                                                        _heights[(i + (j * _size)) % (size2)] +
+                                                        _heights[((i+1) + (j * _size)) % (size2)] +
+                                                        _heights[((i-1) + ((j+1) * _size)) % (size2)] +
+                                                        _heights[(i + ((j+1) * _size)) % (size2)] +
+                                                        _heights[((i+1) + ((j+1) * _size)) % (size2)]) / 9.0f;
+            }
+        }
+    }
+
+}
+
 
 bool DiamondSquareNoise::diamond(unsigned int subdivide)
 {
     unsigned int squaresize = _size - 1, i = 0, j = 0;
     unsigned int indexTL, indexTR, indexBL, indexBR, indexC;
+    double halfRange = (_max - _min) / (2 * pow(2, subdivide - 1));
     for (i = 0; i < subdivide; i++) {
         squaresize /= 2;
     }
@@ -95,17 +128,19 @@ bool DiamondSquareNoise::diamond(unsigned int subdivide)
             // Average the corners
             _heights[indexC] = (_heights[indexTL] + _heights[indexTR] + _heights[indexBL] + _heights[indexBR]) / 4.0f;
             // Add randomness
-            _heights[indexC] += this->rand() / pow(2, subdivide);
+            _heights[indexC] += (this->rand() / pow(2, subdivide - 1)) - halfRange;
         }
     }
     
     return true;
 }
 
+
 bool DiamondSquareNoise::square(unsigned int subdivide)
 {
     unsigned int squaresize = _size - 1, i = 0, j = 0;
     unsigned int indexTL, indexTR, indexBL, indexBR, indexL, indexT, indexR, indexB;
+    double halfRange = (_max - _min) / (2 * pow(2, subdivide - 1));
     for (i = 0; i < subdivide; i++) {
         squaresize /= 2;
     }
@@ -130,15 +165,16 @@ bool DiamondSquareNoise::square(unsigned int subdivide)
             _heights[indexB] = (_heights[indexBL] + _heights[indexBR]) / 2.0f;
             _heights[indexR] = (_heights[indexTR] + _heights[indexBR]) / 2.0f;
             // Add randomness
-            _heights[indexT] += this->rand() / pow(2, subdivide);
-            _heights[indexB] += this->rand() / pow(2, subdivide);
-            _heights[indexL] += this->rand() / pow(2, subdivide);
-            _heights[indexR] += this->rand() / pow(2, subdivide);
+            _heights[indexT] += (this->rand() / pow(2, subdivide - 1)) - halfRange;
+            _heights[indexB] += (this->rand() / pow(2, subdivide - 1)) - halfRange;
+            _heights[indexL] += (this->rand() / pow(2, subdivide - 1)) - halfRange;
+            _heights[indexR] += (this->rand() / pow(2, subdivide - 1)) - halfRange;
         }
     }
     
     return true;
 }
+
 
 
 DiamondSquareNoise::~DiamondSquareNoise()
@@ -147,6 +183,7 @@ DiamondSquareNoise::~DiamondSquareNoise()
         delete _heights;
     }
 }
+
 
 
 

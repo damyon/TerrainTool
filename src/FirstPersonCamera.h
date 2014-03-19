@@ -87,8 +87,14 @@ public:
      */
     void moveRight(float amount);
 
+    /**
+     * Move the camera up.
+     */
     void moveUp(float amount);
 
+    /**
+     * Move the camera down.
+     */
     void moveDown(float amount);
 
     /**
@@ -101,7 +107,16 @@ public:
 
 private:
 
+    
+    /**
+     * Node descriping the orientation of the camera.
+     **/
     Node* _pitchNode;
+    
+    /**
+     * Root node for the camera, can be used to move/rotate etc.
+     **/
+    
     Node* _rootNode;
 };
 
