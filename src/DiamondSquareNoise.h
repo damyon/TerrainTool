@@ -94,9 +94,10 @@ class DiamondSquareNoise : public INoiseAlgorithm
          * @param maxz The maximum Z value that this generator will ever be queried for
          * @param rangemin The minimum height value to return
          * @param rangemax The maximum height value to return
+         * @param seed A random seed
          * @return void
          **/
-        virtual void init(double maxx, double maxz, double rangemin, double rangemax);
+        virtual void init(double maxx, double maxz, double rangemin, double rangemax, int seed);
         
         /**
          * @brief Return one of the precalculated noise values matching the x and z position.

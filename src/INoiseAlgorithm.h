@@ -38,9 +38,10 @@ class INoiseAlgorithm
          * @param maxz The maximum range of the Z coord
          * @param rangemin The minimum height
          * @param rangemax The maximum height
+         * @param seed A random seed
          * @return void
          **/
-        virtual void init(double maxx, double maxz, double rangemin, double rangemax) = 0;
+        virtual void init(double maxx, double maxz, double rangemin, double rangemax, int seed) = 0;
         
         
         /**

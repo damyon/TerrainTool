@@ -61,7 +61,7 @@ void TerrainToolMain::initialize()
     
     
     _mainForm = Form::create("res/main.form");
-   
+    
     Control *control = _mainForm->getControl("TerrainButton");
     control->addListener(this, Control::Listener::CLICK);
     
@@ -84,6 +84,9 @@ void TerrainToolMain::initialize()
     control = _mainForm->getControl("SmoothButton");
     control->addListener(this, Control::Listener::CLICK);
    
+    control = _mainForm->getControl("GenerateButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
     Slider *slider = (Slider *) _mainForm->getControl("SizeSlider");
     slider->addListener(this, Control::Listener::VALUE_CHANGED);
     slider = (Slider *) _mainForm->getControl("SizeSlider2");
@@ -91,9 +94,19 @@ void TerrainToolMain::initialize()
     
     _selectionScale = slider->getValue();
     
+    _generateForm = Form::create("res/generate.form");
+    _generateForm->setVisible(false);
+    
+    control = _generateForm->getControl("CancelGenerateButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
+    control = _generateForm->getControl("ConfirmGenerateButton");
+    control->addListener(this, Control::Listener::CLICK);
+   
     _binding = new TerrainToolAutoBindingResolver();
     _binding->setLight(_light);
   
+    
     // Generate a default terrain.
     Node* node = _scene->addNode("terrain");
     node->setTranslation(Vector3(0, 0, 0));
@@ -160,9 +173,77 @@ void TerrainToolMain::controlEvent(Control* control, Control::Listener::EventTyp
         _terrainGenerator.flatten(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
     } else if (strcmp(control->getId(), "SmoothButton") == 0) {
         _terrainGenerator.smooth(_selectionRing->getPositionX(), _selectionRing->getPositionZ(), _selectionRing->getScale());
-       
+    } else if (strcmp(control->getId(), "GenerateButton") == 0) {
+        _mainForm->setVisible(false);
+        _generateForm->setVisible(true);
+    } else if (strcmp(control->getId(), "CancelGenerateButton") == 0) {
+        _mainForm->setVisible(true);
+        _generateForm->setVisible(false);
+   } else if (strcmp(control->getId(), "ConfirmGenerateButton") == 0) {
+        _mainForm->setVisible(true);
+        _generateForm->setVisible(false);
+        this->generateNewTerrain();
     }
    
+}
+
+void TerrainToolMain::generateNewTerrain()
+{
+    Control * control;
+    Slider * slider;
+    TextBox * textBox;
+    RadioButton * radioButton;
+    float xz = 0, y = 0;
+    
+    control = _generateForm->getControl("DetailLevelsSlider");
+    slider = (Slider *) control;
+    _terrainGenerator.setDetailLevels(slider->getValue());
+    
+    control = _generateForm->getControl("HeightFieldSizeSlider");
+    slider = (Slider *) control;
+    _terrainGenerator.setHeightFieldSize(slider->getValue());
+    
+    control = _generateForm->getControl("MaxHeightSlider");
+    slider = (Slider *) control;
+    _terrainGenerator.setMaxHeight(slider->getValue());
+    
+    control = _generateForm->getControl("MinHeightSlider");
+    slider = (Slider *) control;
+    _terrainGenerator.setMinHeight(slider->getValue());
+    
+    control = _generateForm->getControl("PatchSizeSlider");
+    slider = (Slider *) control;
+    _terrainGenerator.setPatchSize(slider->getValue());
+    
+    control = _generateForm->getControl("SeedTextBox");
+    textBox = (TextBox *) control;
+    _terrainGenerator.setSeed(strtol(textBox->getText(), NULL, 10));
+    
+    control = _generateForm->getControl("ScaleXZSlider");
+    slider = (Slider *) control;
+    xz = slider->getValue();
+    
+    control = _generateForm->getControl("ScaleYSlider");
+    slider = (Slider *) control;
+    y = slider->getValue();
+    
+    _terrainGenerator.setTerrainScale(Vector3(xz, y, xz));
+    
+    control = _generateForm->getControl("SimplexNoiseRadio");
+    radioButton = (RadioButton *) control;
+    if (radioButton->isSelected()) {
+        _terrainGenerator.setNoiseType(TerrainGenerator::Simplex);
+    } else {
+        _terrainGenerator.setNoiseType(TerrainGenerator::DiamondSquare);
+    }
+    
+    _terrainGenerator.buildTerrain();
+    
+    Terrain * terrain = _terrainGenerator.getTerrain();
+    Vector3 pos = _camera.getPosition();
+    pos.y = terrain->getHeight(pos.x, pos.z) + 1000;
+    _camera.setPosition(pos);
+    
 }
 
 
@@ -227,13 +308,8 @@ bool TerrainToolMain::drawScene(Node* node)
     Model* model = node->getModel(); 
     if (model)
     {
-        /*if (node == _selection) {
-            if (_inputMode == TERRAIN_FLATTEN || _inputMode == TERRAIN_LOWER || _inputMode == TERRAIN_RAISE) {
-                model->draw();
-            }
-        } else {*/
-            model->draw();
-       /* } */
+        model->draw();
+       
     } else if (node->getTerrain())
     {
         Terrain* terrain = node->getTerrain();

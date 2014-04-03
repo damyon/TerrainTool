@@ -42,10 +42,11 @@ double DiamondSquareNoise::noise(double x, double z)
 }
 
 
-void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double rangemax)
+void DiamondSquareNoise::init(double maxx, double maxz, double rangemin, double rangemax, int seed)
 {
     double range;
     
+    srand(seed);
     _size = (unsigned int) fmax(maxx, maxz);
     _min = rangemin;
     _max = rangemax;

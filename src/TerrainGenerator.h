@@ -30,6 +30,12 @@ using namespace gameplay;
 class TerrainGenerator
 {
 public:
+    
+    /**
+     * All known noise generators.
+     **/
+    enum NoiseType { Simplex, DiamondSquare };
+    
     /**
      * Constructor...
      *
@@ -163,6 +169,21 @@ public:
     void setMinHeight(float minHeight);
     
     /**
+     * Set which noise generator to use.
+     *
+     * @param type The type of noise
+     * @return void
+     **/
+    void setNoiseType(NoiseType type);
+    
+    /**
+     * Which noise generator is selected.
+     *
+     * @return NoiseType
+     **/
+    NoiseType getNoiseType();
+    
+    /**
      * Get the minimum bounds for the height value for the generated terrain.
      *
      * @return float
@@ -234,6 +255,7 @@ public:
      **/
     float average(float x, float z, float scale);
     
+
 private:
     /**
      * The file path of the first texture blend map.
@@ -294,6 +316,11 @@ private:
      * Random seed that gets set before generating the random terrain.
      **/
     unsigned int _seed;
+    
+    /**
+     * Which noise generator to use.
+     **/
+    NoiseType _noiseType;
     
     /**
      * Scale of the terrain.

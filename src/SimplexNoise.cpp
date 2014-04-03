@@ -52,10 +52,11 @@ double SimplexNoise::dot(const Vector3 & g, double x, double z)
     return g.x * x + g.z * z;
 }
 
-void SimplexNoise::init(double maxx, double maxz, double rangemin, double rangemax)
+void SimplexNoise::init(double maxx, double maxz, double rangemin, double rangemax, int seed)
 {
     _min = rangemin;
     _max = rangemax;
+    _seed = seed;
     _worldScale = maxx;
     if (maxz > maxx) {
         _worldScale = maxz;
@@ -79,6 +80,8 @@ double SimplexNoise::noise(double x, double z)
     double sum = 0.0;
     double amplitude = 1.0 / _worldScale;
 
+    x += _seed;
+    z += _seed;
     int i;
     x *= amplitude;
     z *= amplitude;

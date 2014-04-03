@@ -44,9 +44,10 @@ class SimplexNoise : public INoiseAlgorithm
          * @param maxz Maximum Z value this generator will be called with.
          * @param rangemin The minumum height value to generate.
          * @param rangemax The maximum height value to generate.
+         * @param seed A random seed
          * @return void
          **/
-        virtual void init(double maxx, double maxz, double rangemin, double rangemax);
+        virtual void init(double maxx, double maxz, double rangemin, double rangemax, int seed);
         
         /**
          * This is the business function - get the height value for a given x and z coordinate.
@@ -119,6 +120,11 @@ class SimplexNoise : public INoiseAlgorithm
          * The minumum allowed height value.
          **/
         double _min;
+        
+        /**
+         * Seed - added to the x and y for the noise function to get reproducible randomness.
+         **/
+        int _seed;
         
         /**
          * The max allowed height value.

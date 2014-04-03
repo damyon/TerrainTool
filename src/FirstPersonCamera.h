@@ -68,6 +68,13 @@ public:
     void setPosition(const Vector3& position);
 
     /**
+     * Gets the position of the camera.
+     * 
+     * @return the current camera position
+     */
+    const Vector3& getPosition();
+
+    /**
      * Moves the camera forward in the direction that it is pointing. (Fly mode)
      */
     void moveForward(float amount);

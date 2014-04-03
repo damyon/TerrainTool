@@ -25,6 +25,12 @@ FirstPersonCamera::FirstPersonCamera()
     
 }
 
+const Vector3& FirstPersonCamera::getPosition()
+{
+    return _rootNode->getTranslation();
+}
+
+
 FirstPersonCamera::~FirstPersonCamera()
 {
     SAFE_RELEASE(_pitchNode);

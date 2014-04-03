@@ -25,8 +25,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-TerrainGenerator::TerrainGenerator()
-: _terrain(NULL), _heightFieldSize(256), _patchSize(32), _detailLevels(3), _seed(0), _terrainScale(Vector3(2000, 300, 2000)), _skirtScale(3.0f), _minHeight(0.0f), _maxHeight(150.0f), _isDirty(true), _blendResolution(1024)
+TerrainGenerator::TerrainGenerator() :
+_terrain(NULL), 
+_heightFieldSize(256),
+_patchSize(32),
+_detailLevels(3),
+_seed(0),
+_terrainScale(Vector3(2000, 300, 2000)),
+_skirtScale(3.0f),
+_minHeight(0.0f),
+_maxHeight(150.0f),
+_isDirty(true),
+_blendResolution(1024),
+_noiseType(Simplex)
 {
     timeval time;
     gettimeofday(&time, NULL);
@@ -394,14 +405,30 @@ void TerrainGenerator::raise(float x, float z, float scale)
     this->updateTerrain();
 }
 
+void TerrainGenerator::setNoiseType(TerrainGenerator::NoiseType type)
+{
+    _noiseType = type;
+}
+
+
 void TerrainGenerator::buildTerrain()
 {
+    
+    
+    if (_heightField) {
+        SAFE_RELEASE(_heightField);
+    }
+    
     _heightField = HeightField::create(_heightFieldSize, _heightFieldSize);
     
-    //INoiseAlgorithm * noise = new DiamondSquareNoise();
-    INoiseAlgorithm * noise = new SimplexNoise();
+    INoiseAlgorithm * noise = NULL;
+    if (_noiseType == DiamondSquare) {
+        noise = new DiamondSquareNoise();
+    } else {
+        noise = new SimplexNoise();
+    }
     
-    noise->init(_heightFieldSize, _heightFieldSize, _minHeight, _maxHeight);
+    noise->init(_heightFieldSize, _heightFieldSize, _minHeight, _maxHeight, _seed);
             
     float *usedHeights = _heightField->getArray();
     
@@ -419,6 +446,12 @@ void TerrainGenerator::buildTerrain()
     _isDirty = false;
     
 }
+
+TerrainGenerator::NoiseType TerrainGenerator::getNoiseType()
+{
+    return _noiseType;
+}
+
 
 unsigned int TerrainGenerator::getDetailLevels()
 {

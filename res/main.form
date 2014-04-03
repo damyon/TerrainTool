@@ -91,7 +91,7 @@ form MainForm
             height = 45
             width = 120
         }
-        button GenerateTerrainButton
+        button GenerateButton
         {
             text = Generate New
             height = 45

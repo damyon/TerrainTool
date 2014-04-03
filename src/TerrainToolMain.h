@@ -72,6 +72,9 @@ protected:
      */
     void render(float elapsedTime);
 
+    /**
+     * Handler for UI form event
+     */
     void controlEvent(Control* control, EventType evt);
 
 private:
@@ -89,6 +92,13 @@ private:
      **/
     void moveCamera(float elapsedTime);
 
+    /**
+     * Build a new terrain based on the parameters in the terrain generation form.
+     *
+     * @return void
+     **/
+    void generateNewTerrain();
+    
     /**
      * Used by the ui to switch input states.
      **/
