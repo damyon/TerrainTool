@@ -8,6 +8,12 @@
     <Filter Include="res\shaders">
       <UniqueIdentifier>{f54d3628-f193-4138-97ca-0ca3b34480d0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\headers">
+      <UniqueIdentifier>{1ea93eea-c06f-4bbe-a676-a2ee3938ad79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\source">
+      <UniqueIdentifier>{c9d68f84-ad91-46bd-980b-f4f7b77ba455}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="game.config" />
@@ -75,13 +81,58 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\TerrainToolMain.h">
-      <Filter>src</Filter>
-    </ClInclude>
+    <ClCompile Include="src\TerrainToolMain.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DiamondSquareNoise.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FirstPersonCamera.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LodePNG.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SelectionRing.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimplexNoise.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TerrainGenerator.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TerrainToolAutoBindingResolver.cpp">
+      <Filter>src\source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\TerrainToolMain.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
+    <ClInclude Include="src\TerrainToolMain.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DiamondSquareNoise.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FirstPersonCamera.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\INoiseAlgorithm.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LodePNG.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SelectionRing.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SimplexNoise.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TerrainGenerator.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TerrainToolAutoBindingResolver.h">
+      <Filter>src\headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
