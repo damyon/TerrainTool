@@ -6242,7 +6242,12 @@ unsigned encode(const std::string& filename,
 {
   std::vector<unsigned char> buffer;
   unsigned error = encode(buffer, in, w, h, colortype, bitdepth);
+#ifdef __APPLE__ || TARGET_OS_MAC || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || UNIX || LINUX || __MINGW32__ || __GNUC__
   if(!error) save_file(buffer, filename);
+#elif WIN32
+  if (!error) lodepng_save_file((unsigned char*)&buffer[0], buffer.size(), filename.c_str());
+#endif
+
   return error;
 }
 
