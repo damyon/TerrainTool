@@ -30,11 +30,10 @@
 
 double DiamondSquareNoise::rand()
 {
-#ifdef __APPLE__ || TARGET_OS_MAC || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || UNIX || LINUX || __MINGW32__ || __GNUC__
-	return _min + static_cast <double> (random()) /( static_cast <double> (RAND_MAX/(_max-_min)));
-#elif WIN32
-	srand(time(0));
+#ifdef WIN32
 	return _min + static_cast <double> (rand()) / (static_cast <double> (RAND_MAX / (_max - _min)));
+#else
+    return _min + static_cast <double> (random()) /( static_cast <double> (RAND_MAX/(_max-_min)));
 #endif
 
 }
@@ -121,7 +120,7 @@ bool DiamondSquareNoise::diamond(unsigned int subdivide)
 {
     unsigned int squaresize = _size - 1, i = 0, j = 0;
     unsigned int indexTL, indexTR, indexBL, indexBR, indexC;
-	double halfRange = (_max - _min) / (2 * pow(2, (float)subdivide - 1));
+    double halfRange = (_max - _min) / (2 * pow(2, (float)subdivide - 1));
     for (i = 0; i < subdivide; i++) {
         squaresize /= 2;
     }
@@ -140,7 +139,7 @@ bool DiamondSquareNoise::diamond(unsigned int subdivide)
             // Average the corners
             _heights[indexC] = (_heights[indexTL] + _heights[indexTR] + _heights[indexBL] + _heights[indexBR]) / 4.0f;
             // Add randomness
-			_heights[indexC] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
+            _heights[indexC] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
         }
     }
     
@@ -152,7 +151,7 @@ bool DiamondSquareNoise::square(unsigned int subdivide)
 {
     unsigned int squaresize = _size - 1, i = 0, j = 0;
     unsigned int indexTL, indexTR, indexBL, indexBR, indexL, indexT, indexR, indexB;
-	double halfRange = (_max - _min) / (2 * pow(2, (float)subdivide - 1));
+    double halfRange = (_max - _min) / (2 * pow(2, (float)subdivide - 1));
     for (i = 0; i < subdivide; i++) {
         squaresize /= 2;
     }
@@ -177,10 +176,10 @@ bool DiamondSquareNoise::square(unsigned int subdivide)
             _heights[indexB] = (_heights[indexBL] + _heights[indexBR]) / 2.0f;
             _heights[indexR] = (_heights[indexTR] + _heights[indexBR]) / 2.0f;
             // Add randomness
-			_heights[indexT] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
-			_heights[indexB] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
-			_heights[indexL] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
-			_heights[indexR] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
+            _heights[indexT] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
+            _heights[indexB] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
+            _heights[indexL] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
+            _heights[indexR] += (this->rand() / pow(2, (float)subdivide - 1)) - halfRange;
         }
     }
     

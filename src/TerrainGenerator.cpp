@@ -21,12 +21,12 @@
 #include "SimplexNoise.h"
 #include "LodePNG.h"
 
-#ifdef __APPLE__ || TARGET_OS_MAC || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || UNIX || LINUX || __MINGW32__ || __GNUC__
-#include <sys/time.h>
-#elif WIN32
+#if WIN32
 #include <time.h>
 #include <io.h>
 #include <direct.h>
+#else
+#include <sys/time.h>
 #endif
 #include <stdlib.h>
 #include <math.h>
@@ -47,14 +47,14 @@ _blendResolution(1024),
 _noiseType(Simplex)
 {
 
-#ifdef __APPLE__ || TARGET_OS_MAC || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || UNIX || LINUX || __MINGW32__ || __GNUC__
-	timeval time;
-	gettimeofday(&time, NULL);
-#elif WIN32
-	time_t now;
-	tm* local;
-	time(&now);
-	local = localtime(&now);
+#ifdef WIN32
+    time_t now;
+    tm* local;
+    time(&now);
+    local = localtime(&now);
+#else
+    timeval time;
+    gettimeofday(&time, NULL);
 #endif
     
     // The file name changes each time they are generated to prevent caching.
@@ -140,16 +140,17 @@ void TerrainGenerator::createTransparentBlendImages()
         }
     }
 
-	// Generate a new tmp folder for the blend images.
-#ifdef __APPLE__ || TARGET_OS_MAC || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || UNIX || LINUX || __MINGW32__ || __GNUC__
-	char tmpdir[] = "/tmp/fileXXXXXX";
-	mkdtemp(tmpdir);
-
-#elif WIN32
+    // Generate a new tmp folder for the blend images.
+#if WIN32
 	char tmpdir[] = "res/tmp/fileXXXXXX";
 	//_mktemp_s(tmpdir,sizeof(tmpdir));
 	mktemp(tmpdir);
 	_mkdir(tmpdir);
+    
+#else
+    char tmpdir[] = "/tmp/fileXXXXXX";
+    mkdtemp(tmpdir);
+
 #endif
     
     if (_layer1BlendFile[0] != '\0') {
